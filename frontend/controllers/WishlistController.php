@@ -1,0 +1,148 @@
+<?php
+
+namespace frontend\controllers;
+
+use Yii;
+use common\models\Wishlist;
+use common\models\WishlistSearch;
+use yii\web\Controller;
+use yii\web\NotFoundHttpException;
+use yii\filters\VerbFilter;
+
+/**
+ * WishlistController implements the CRUD actions for Wishlist model.
+ */
+class WishlistController extends Controller
+{
+    /**
+     * @inheritdoc
+     */
+    public function behaviors()
+    {
+        return [
+            'verbs' => [
+                'class' => VerbFilter::className(),
+                'actions' => [
+                    'delete' => ['POST'],
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * Lists all Wishlist models.
+     * @return mixed
+     */
+    public function actionIndex()
+    {
+        $searchModel = new WishlistSearch();
+        $searchModel->user_id=Yii::$app->user->id;
+        $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
+
+        return $this->render('index', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+
+    /**
+     * Displays a single Wishlist model.
+     * @param integer $id
+     * @return mixed
+     */
+    public function actionView($id)
+    {
+        return $this->render('view', [
+            'model' => $this->findModel($id),
+        ]);
+    }
+
+    /**
+     * Creates a new Wishlist model.
+     * If creation is successful, the browser will be redirected to the 'view' page.
+     * @return mixed
+     */
+    public function actionCreate()
+    {
+        $model = new Wishlist();
+
+        if ($model->load(Yii::$app->request->post()) && $model->save()) {
+            return $this->redirect(['view', 'id' => $model->id]);
+        } else {
+            return $this->render('create', [
+                'model' => $model,
+            ]);
+        }
+    }
+
+    /**
+     * Updates an existing Wishlist model.
+     * If update is successful, the browser will be redirected to the 'view' page.
+     * @param integer $id
+     * @return mixed
+     */
+    public function actionUpdate($id)
+    {
+        $model = $this->findModel($id);
+
+        if ($model->load(Yii::$app->request->post()) && $model->save()) {
+            return $this->redirect(['view', 'id' => $model->id]);
+        } else {
+            return $this->render('update', [
+                'model' => $model,
+            ]);
+        }
+    }
+
+    /**
+     * Deletes an existing Wishlist model.
+     * If deletion is successful, the browser will be redirected to the 'index' page.
+     * @param integer $id
+     * @return mixed
+     */
+    public function actionDelete($id)
+    {
+        $this->findModel($id)->delete();
+
+        return $this->redirect(['index']);
+    }
+
+    /**
+     * Finds the Wishlist model based on its primary key value.
+     * If the model is not found, a 404 HTTP exception will be thrown.
+     * @param integer $id
+     * @return Wishlist the loaded model
+     * @throws NotFoundHttpException if the model cannot be found
+     */
+     public function actionAddToWishlist($id){
+       $model= new Wishlist();
+       if(!empty($model)){
+        
+        $user_id=Yii::$app->user->getId();
+        $product_id=$id;
+        $model->user_id=$user_id;
+
+        $model->product_id=$product_id;
+         $model->save();
+         echo json_encode([
+        'success'=>1,
+        'flash_class'=>'alert alert-success',
+        'message'=>'Wishlist has been udpated',
+        
+        'flash_message'=>'Success! Wishlist has been udpated.'
+    ]);
+    exit;
+         Yii::$app->session->setFlash('success', 'Your wishlist has been updated!');
+          return $this->redirect(Yii::$app->request->referrer);
+       
+      }
+  }
+    protected function findModel($id)
+    {
+        if (($model = Wishlist::findOne($id)) !== null) {
+            return $model;
+        } else {
+            throw new NotFoundHttpException('The requested page does not exist.');
+        }
+    }
+}
